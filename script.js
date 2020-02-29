@@ -9,6 +9,8 @@ mars.src = "img/mars.png";
 let marsWidth = 500;
 let marsX = context.canvas.width + marsWidth;
 let backgroundX = 0;
+let backgroundY = -1024;
+let backgroundYTarget = -1024;
 
 let truck = {image: new Image(),
              x: 50,
@@ -20,6 +22,7 @@ truck["image"].src = "img/truck.png";
 let mainSound = document.querySelector("audio");
 mainSound.controls = false;
 mainSound.loop = true;
+mainSound.pause();
 
 let musk = {image: new Image(), x: 0, y:0};
 musk["image"].src = "img/musk.png";
@@ -52,6 +55,9 @@ let explosionX = 0;
 let explosionY = 0;
 
 
+let framecount = 0;
+let framecountPointer = 0;
+let easingMultiplier = .5;
 
 for(let i = 0; i<17; i++){
     explosionGif.push(new Image());
@@ -105,11 +111,13 @@ const updateTruckPos = () => {
     if(movingDown){
         if(truck["y"]+truck["height"]*.75 < context.canvas.height){
         truck["y"]+=10;
+        backgroundYTarget-=2;  
         }    
     }
     if(movingUp){
         if(truck["y"]+truck["height"]*.25 >= 0){
         truck["y"]-=10;
+        backgroundYTarget+=2;  
         }
     }
     if(movingLeft){
@@ -150,12 +158,20 @@ const addObstacles = (y) => {
 //     console.log("Obstacle Added");
 }
 
-const destroyObstacles = (i) => {
-    Obstacles.splice(i,1);
+const destroyObstacles = () => {
+    for (let i = 0; i < Obstacles.length; i++){
+        if(Obstacles[i].isDead){
+            Obstacles.splice(i,1);
+        }
+    }
 }
 
-const destroyProjectile = (i) => {
-    Projectiles.splice(i,1);
+const destroyProjectiles = () => {
+    for (let i = 0; i<Projectiles.length; i++){
+        if(Projectiles[i].isDead){
+            Projectiles.splice(i,1);
+        }
+    }
 }
 
 const collisionDetection = () => {
@@ -166,8 +182,8 @@ const collisionDetection = () => {
             if(Obstacles[j].x >= Projectiles[i].x && Obstacles[j].x <= Projectiles[i].x + width){
                 if(Obstacles[j].y>=Projectiles[i].y && Obstacles[j].y <= Projectiles[i].y+height){
                    explosionGIFS.push(new Gif(explosionGif, Obstacles[j].x-50, Obstacles[j].y-150, .25));   
-                   destroyObstacles(j);
-                   destroyProjectile(i);
+                   Obstacles[j].isDead = true;
+                   Projectiles[i].isDead = true; 
                 }
             }
         }
@@ -211,7 +227,7 @@ const backgroundDraw = () => {
     let NOHeight = Math.ceil(context.canvas.height/1024);
     for (let i = 0; i<= NOWidth+1; i++){
         for(let j = 0; j<=NOHeight+1; j++){
-          context.drawImage(img, 1024*i+backgroundX, 1024*j);  
+          context.drawImage(img, 1024*i+backgroundX, 1024*j+backgroundY);  
         }
     }
     
@@ -221,11 +237,16 @@ const backgroundDraw = () => {
     }
 }
 
+const easeBackground = () => {
+//TODO
+ backgroundY = backgroundYTarget;
+}
+
 const mainDraw = () => {
-  
+    framecount++;
     context.canvas.width = window.innerWidth;
     context.canvas.height = window.innerHeight;
-
+    
 
     if(marsX+marsWidth <=0){
         marsX = context.canvas.width;
@@ -235,7 +256,7 @@ const mainDraw = () => {
     
 //     context.scale(transformScale,transformScale);
    backgroundDraw();
-    
+   easeBackground(); 
     context.drawImage(mars, marsX, 250, marsWidth,500);
 //     transformScale-=.001;
 //     context.translate(-canvas.width / 4, -canvas.height / 4);
@@ -260,6 +281,8 @@ const mainDraw = () => {
     marsX--;
     
     window.requestAnimationFrame(mainDraw);
+    destroyObstacles();
+    destroyProjectiles();
     
 }
 mainDraw();
@@ -272,6 +295,7 @@ class Projectile{
     this.y = y;
     this.velocity = velocity;
     this.power = power;
+    this.isDead = false;    
     }
 }
 
@@ -282,6 +306,7 @@ class Obstacle{
         this.y = y; 
         this.velocity = velocity;
         this.health = health;
+        this.isDead = false;
     }
 }
 
