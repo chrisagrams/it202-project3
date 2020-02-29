@@ -19,10 +19,16 @@ let truck = {image: new Image(),
              height: 200};
 truck["image"].src = "img/truck.png";
 
-let mainSound = document.querySelector("audio");
+let mainSound = document.querySelector("audio#mainSound");
 mainSound.controls = false;
 mainSound.loop = true;
 mainSound.pause();
+
+let introSound = document.querySelector("audio#introSound");
+introSound.controls = false;
+introSound.loop = true;
+introSound.play();
+
 
 let musk = {image: new Image(), x: 0, y:0};
 musk["image"].src = "img/musk.png";
@@ -59,6 +65,12 @@ let framecount = 0;
 let framecountPointer = 0;
 let easingMultiplier = .5;
 
+let rotation = 0;
+
+let pumpX = 0;
+
+let onMenu = true;
+
 for(let i = 0; i<17; i++){
     explosionGif.push(new Image());
     explosionGif[i].src = "img/explosionPNG/explosion" + (i+1) + ".png";
@@ -82,7 +94,11 @@ document.addEventListener("keydown", event => {
   }
   if (event.isComposing || event.code == "Space"){
 //       console.log("Space");
-      Projectiles.push(new Projectile(twitter, truck["x"], truck["y"], 1, 1));
+      if(onMenu){
+          onMenu=!onMenu;
+      }
+      else
+          Projectiles.push(new Projectile(twitter, truck["x"], truck["y"], 1, 1));
   }
   
   //test
@@ -223,14 +239,18 @@ const randomSpawn = () => {
 }
 
 const backgroundDraw = () => {
-    let NOWidth = Math.ceil(context.canvas.width/1024);
-    let NOHeight = Math.ceil(context.canvas.height/1024);
+    let NOWidth = Math.ceil(context.canvas.width/1024)+1;
+    let NOHeight = Math.ceil(context.canvas.height/1024)+1;
     for (let i = 0; i<= NOWidth+1; i++){
         for(let j = 0; j<=NOHeight+1; j++){
-          context.drawImage(img, 1024*i+backgroundX, 1024*j+backgroundY);  
+          context.drawImage(img, 1024*i+backgroundX-1024, 1024*j+backgroundY-1024);  
         }
     }
     
+    
+}
+
+const backgroundItterate = () => {
     backgroundX-=10;
     if(backgroundX<=-1024){
       backgroundX=0;
@@ -242,11 +262,64 @@ const easeBackground = () => {
  backgroundY = backgroundYTarget;
 }
 
-const mainDraw = () => {
-    framecount++;
+const rotateBackground = () => {
+    context.translate(context.canvas.width*.5, context.canvas.height*.5);
+    context.rotate((Math.PI / 180) * rotation);
+    context.translate(-context.canvas.width*.5, -context.canvas.height*.5);
+
+    rotation+=.1;
+}
+const undoRotation = () => {
+    context.translate(context.canvas.width*.5, context.canvas.height*.5);
+    context.rotate(-1* (Math.PI / 180) * rotation);
+    context.translate(-context.canvas.width*.5, -context.canvas.height*.5);
+
+}
+
+const adjustCanvas = () =>{
     context.canvas.width = window.innerWidth;
     context.canvas.height = window.innerHeight;
     
+}
+
+const pumpText = () =>{
+    context.translate(context.canvas.width*.5, context.canvas.height*.5);
+    context.scale(.35*(Math.cos(pumpX)+2),.35*(Math.cos(pumpX)+2));
+    context.translate(-context.canvas.width*.5, -context.canvas.height*.5);
+    pumpX+=0.05;
+}
+
+const undoPumpText = () =>{
+    context.scale(-.35*(Math.cos(pumpX)+2),-.35*(Math.cos(pumpX))+2);
+
+}
+
+const menuDraw = () => {
+    adjustCanvas();
+    rotateBackground();
+    backgroundDraw();
+    undoRotation();
+    context.font = "64px Comic Sans MS";
+    context.fillStyle = "#FFFFFF";
+    context.textAlign="center"; 
+    context.textBaseline = "middle";
+    context.fillText("Elon Musk Simulator 2020", context.canvas.width*.5, context.canvas.height*.25);
+    pumpText();
+    context.fillText("Press \"Space\" to begin.", context.canvas.width*.5, context.canvas.height*.75);
+    undoPumpText();
+    if(onMenu)
+    window.requestAnimationFrame(menuDraw);
+    else
+        mainDraw();
+
+}
+
+
+
+const mainDraw = () => {
+    framecount++;
+   
+    adjustCanvas();
 
     if(marsX+marsWidth <=0){
         marsX = context.canvas.width;
@@ -256,6 +329,7 @@ const mainDraw = () => {
     
 //     context.scale(transformScale,transformScale);
    backgroundDraw();
+   backgroundItterate();
    easeBackground(); 
     context.drawImage(mars, marsX, 250, marsWidth,500);
 //     transformScale-=.001;
@@ -285,7 +359,8 @@ const mainDraw = () => {
     destroyProjectiles();
     
 }
-mainDraw();
+menuDraw();
+// mainDraw();
 
 
 class Projectile{
