@@ -8,7 +8,7 @@ let mars = new Image();
 mars.src = "img/mars.png";
 let marsWidth = 500;
 let marsX = context.canvas.width + marsWidth;
-let x = 0;
+let backgroundX = 0;
 
 let truck = {image: new Image(),
              x: 50,
@@ -17,7 +17,9 @@ let truck = {image: new Image(),
              height: 200};
 truck["image"].src = "img/truck.png";
 
-
+let mainSound = document.querySelector("audio");
+mainSound.controls = false;
+mainSound.loop = true;
 
 let musk = {image: new Image(), x: 0, y:0};
 musk["image"].src = "img/musk.png";
@@ -73,7 +75,7 @@ document.addEventListener("keydown", event => {
     movingRight = true;
   }
   if (event.isComposing || event.code == "Space"){
-      console.log("Space");
+//       console.log("Space");
       Projectiles.push(new Projectile(twitter, truck["x"], truck["y"], 1, 1));
   }
   
@@ -132,10 +134,10 @@ const drawProjectiles = () => {
 }
 
 const updateProjectiles = () => {
-    console.log(Projectiles.length);
+//     console.log(Projectiles.length);
     for (let i = 0; i<Projectiles.length; i++){
         Projectiles[i].x+=10;
-        console.log(Projectiles[i].x);
+//         console.log(Projectiles[i].x);
         if(Projectiles[i].x > context.canvas.width){
             Projectiles.splice(i,1);
         }
@@ -145,7 +147,7 @@ const updateProjectiles = () => {
 
 const addObstacles = (y) => {
     Obstacles.push(new Obstacle(SEC, context.canvas.width, y, 1, 10));
-    console.log("Obstacle Added");
+//     console.log("Obstacle Added");
 }
 
 const destroyObstacles = (i) => {
@@ -204,14 +206,27 @@ const randomSpawn = () => {
     }
 }
 
+const backgroundDraw = () => {
+    let NOWidth = Math.ceil(context.canvas.width/1024);
+    let NOHeight = Math.ceil(context.canvas.height/1024);
+    for (let i = 0; i<= NOWidth+1; i++){
+        for(let j = 0; j<=NOHeight+1; j++){
+          context.drawImage(img, 1024*i+backgroundX, 1024*j);  
+        }
+    }
+    
+    backgroundX-=10;
+    if(backgroundX<=-1024){
+      backgroundX=0;
+    }
+}
+
 const mainDraw = () => {
   
     context.canvas.width = window.innerWidth;
     context.canvas.height = window.innerHeight;
 
-    if(x<=-1024){
-        x=0;
-    }
+
     if(marsX+marsWidth <=0){
         marsX = context.canvas.width;
     }
@@ -219,9 +234,7 @@ const mainDraw = () => {
     updateTruckPos();
     
 //     context.scale(transformScale,transformScale);
-    context.drawImage(img, x, 0);
-    context.drawImage(img, x+1024, 0);
-    context.drawImage(img, x+2048, 0);
+   backgroundDraw();
     
     context.drawImage(mars, marsX, 250, marsWidth,500);
 //     transformScale-=.001;
@@ -243,7 +256,7 @@ const mainDraw = () => {
     
    randomSpawn();
     
-    x-=10;
+
     marsX--;
     
     window.requestAnimationFrame(mainDraw);
