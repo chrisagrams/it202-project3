@@ -52,6 +52,13 @@ let Projectiles = [];
 
 let SEC = new Image();
 SEC.src = "img/SEC.png";
+let bezzos = new Image();
+bezzos.src = "img/bezzos.png";
+let palin = new Image();
+palin.src = "img/Palin.png";
+
+let enemies = [SEC, bezzos, palin];
+
 let Obstacles = [];
 
 let explosionGif = [];
@@ -182,7 +189,9 @@ const updateProjectiles = () => {
 }
 
 const addObstacles = (y) => {
-    Obstacles.push(new Obstacle(SEC, context.canvas.width, y, 1, 10));
+    let selected = Math.floor(Math.random()*enemies.length);
+    console.log(selected);
+    Obstacles.push(new Obstacle(enemies[selected], context.canvas.width, y, 1, 10));
 //     console.log("Obstacle Added");
 }
 
