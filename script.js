@@ -82,6 +82,8 @@ let pumpX = 0;
 
 let onMenu = true;
 
+let score = 0;
+
 for(let i = 0; i<17; i++){
     explosionGif.push(new Image());
     explosionGif[i].src = "img/explosionPNG/explosion" + (i+1) + ".png";
@@ -221,7 +223,8 @@ const collisionDetection = () => {
                    explosionGIFS.push(new Gif(explosionGif, Obstacles[j].x-50, Obstacles[j].y-150, .25));   
                    Obstacles[j].isDead = true;
                    Projectiles[i].isDead = true; 
-                   explosionSound.cloneNode(true).play(); 
+                   explosionSound.cloneNode(true).play();
+                   score +=5; 
                 }
             }
         }
@@ -347,7 +350,13 @@ const drawMars = () => {
         marsX--;
 }
 
-
+const showScore = () => {
+    context.font = "20px Comic Sans MS";
+    context.fillStyle = "#FFFFFF";
+    context.textAlign="left"; 
+    context.textBaseline = "top";
+    context.fillText("Score: " + score, context.canvas.width-125, 25);
+}
 
 const mainDraw = () => {
     framecount++;
@@ -362,6 +371,7 @@ const mainDraw = () => {
    backgroundDraw();
    backgroundItterate();
    easeBackground(); 
+   showScore(); 
     
 //     transformScale-=.001;
 //     context.translate(-canvas.width / 4, -canvas.height / 4);
