@@ -8,6 +8,7 @@ let mars = new Image();
 mars.src = "img/mars.png";
 let marsWidth = 500;
 let marsX = context.canvas.width + marsWidth;
+let marsY = 250;
 let backgroundX = 0;
 let backgroundY = -1024;
 let backgroundYTarget = -1024;
@@ -137,12 +138,14 @@ const updateTruckPos = () => {
         if(truck["y"]+truck["height"]*.75 < context.canvas.height){
         truck["y"]+=10;
         backgroundYTarget-=2;  
+        marsY-=1;    
         }    
     }
     if(movingUp){
         if(truck["y"]+truck["height"]*.25 >= 0){
-        truck["y"]-=10;
-        backgroundYTarget+=2;  
+            truck["y"]-=10;
+            backgroundYTarget+=2;  
+            marsY+=1;    
         }
     }
     if(movingLeft){
@@ -327,6 +330,14 @@ const menuDraw = () => {
 
 }
 
+const drawMars = () => {
+        if(marsX+marsWidth <=0){
+            marsX = context.canvas.width;
+        }
+        context.drawImage(mars, marsX, marsY, marsWidth,500);
+        marsX--;
+}
+
 
 
 const mainDraw = () => {
@@ -334,9 +345,7 @@ const mainDraw = () => {
    
     adjustCanvas();
 
-    if(marsX+marsWidth <=0){
-        marsX = context.canvas.width;
-    }
+    
     
     updateTruckPos();
     
@@ -344,11 +353,12 @@ const mainDraw = () => {
    backgroundDraw();
    backgroundItterate();
    easeBackground(); 
-    context.drawImage(mars, marsX, 250, marsWidth,500);
+    
 //     transformScale-=.001;
 //     context.translate(-canvas.width / 4, -canvas.height / 4);
 
-    context.scale(1/transformScale,1/transformScale);
+//     context.scale(1/transformScale,1/transformScale);
+    drawMars();
     context.drawImage(musk["image"], musk["x"], musk["y"], 100,100);
     context.drawImage(truck["image"],truck["x"],truck["y"],truck["width"],truck["height"]);
     
@@ -365,7 +375,6 @@ const mainDraw = () => {
    randomSpawn();
     
 
-    marsX--;
     
     window.requestAnimationFrame(mainDraw);
     destroyObstacles();
