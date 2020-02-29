@@ -329,9 +329,14 @@ const menuDraw = () => {
     context.textAlign="center"; 
     context.textBaseline = "middle";
     context.fillText("Elon Musk Simulator 2020", context.canvas.width*.5, context.canvas.height*.25);
+  
+    context.font = "20px Comic Sans MS";
+    context.fillText("Controls: Arrows to move, \"Space\" to shoot.", context.canvas.width*.5, context.canvas.height*.9);
+    context.font = "64px Comic Sans MS";
     pumpText();
     context.fillText("Press \"Space\" to begin.", context.canvas.width*.5, context.canvas.height*.75);
     undoPumpText();
+
     if(onMenu)
     window.requestAnimationFrame(menuDraw);
     else{
@@ -355,7 +360,7 @@ const showScore = () => {
     context.fillStyle = "#FFFFFF";
     context.textAlign="left"; 
     context.textBaseline = "top";
-    context.fillText("Score: " + score, context.canvas.width-125, 25);
+    context.fillText("Score: " + score, context.canvas.width-150, context.canvas.height*.05);
 }
 
 const mainDraw = () => {
