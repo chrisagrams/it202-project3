@@ -22,12 +22,15 @@ truck["image"].src = "img/truck.png";
 let mainSound = document.querySelector("audio#mainSound");
 mainSound.controls = false;
 mainSound.loop = true;
-mainSound.pause();
+
 
 let introSound = document.querySelector("audio#introSound");
 introSound.controls = false;
 introSound.loop = true;
-introSound.play();
+
+let tweetSound = document.querySelector("audio#tweet");
+let explosionSound = document.querySelector("audio#explosion");
+
 
 
 let musk = {image: new Image(), x: 0, y:0};
@@ -78,6 +81,9 @@ for(let i = 0; i<17; i++){
 
 let explosionGIFS = [];
 
+document.addEventListener("load", event => {
+    introSound.play();
+});
 
 document.addEventListener("keydown", event => {
   if (event.isComposing || event.key == "ArrowUp") {
@@ -97,8 +103,11 @@ document.addEventListener("keydown", event => {
       if(onMenu){
           onMenu=!onMenu;
       }
-      else
+      else{
           Projectiles.push(new Projectile(twitter, truck["x"], truck["y"], 1, 1));
+          tweetSound.cloneNode(true).play();
+      }
+      
   }
   
   //test
@@ -200,6 +209,7 @@ const collisionDetection = () => {
                    explosionGIFS.push(new Gif(explosionGif, Obstacles[j].x-50, Obstacles[j].y-150, .25));   
                    Obstacles[j].isDead = true;
                    Projectiles[i].isDead = true; 
+                   explosionSound.cloneNode(true).play(); 
                 }
             }
         }
@@ -309,8 +319,11 @@ const menuDraw = () => {
     undoPumpText();
     if(onMenu)
     window.requestAnimationFrame(menuDraw);
-    else
+    else{
+        introSound.pause();
+        mainSound.play();
         mainDraw();
+    }
 
 }
 
