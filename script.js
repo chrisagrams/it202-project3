@@ -37,12 +37,15 @@ window.onLoad = load();
 let tweetSound = document.querySelector("audio#tweet");
 let explosionSound = document.querySelector("audio#explosion");
 
+let sirenShort = document.querySelector("audio#sirenShort");
 
+let sirenLong = document.querySelector("audio#sirenLong");
 
 let musk = {image: new Image(), x: 0, y:0};
 musk["image"].src = "img/musk.png";
 musk["x"] = truck["x"];
 musk["y"] = truck["y"] - 25;
+musk["height"] = 50;
 
 let movingDown = false;
 let movingUp = false;
@@ -61,6 +64,9 @@ let bezzos = new Image();
 bezzos.src = "img/bezzos.png";
 let palin = new Image();
 palin.src = "img/Palin.png";
+
+let muskHead = new Image();
+muskHead.src = "img/musk3.png"
 
 let enemies = [SEC, bezzos, palin];
 
@@ -91,6 +97,11 @@ let score = 0;
 
 let itterateRate = 10;
 let previousScore = 0;
+
+let pulse = 0;
+let pulsing = false;
+
+let lives = 3;
 
 for(let i = 0; i<17; i++){
     explosionGif.push(new Image());
@@ -268,9 +279,13 @@ const randomSpawn = () => {
     tempRandom = Math.random();
     if(tempRandom<upperBound && tempRandom>lowerBound){
         let randomHeight = Math.random()*context.canvas.height;
-        if (randomHeight<truck["height"]+musk["height"])
-            randomHeight +=truck["height"]+musk["height"];
-        addObstacles(randomHeight);
+        console.log(randomHeight);
+        if (randomHeight>context.canvas.height-truck["height"]-musk["height"]){
+            console.log("Out of bounds");
+        }
+        else{
+            addObstacles(randomHeight);
+        }
     }
 }
 
@@ -400,6 +415,64 @@ const showLevel = () =>{
     }    
 }
 
+const drawGrad = () => {
+    if(pulse>= Math.PI){
+       pulse = 0;
+    }
+    let grd = context.createRadialGradient(context.canvas.width*.5, context.canvas.height*.5, 0, context.canvas.width*.5, context.canvas.height*.5, context.canvas.width*.75);
+    grd.addColorStop(0, "transparent");
+    grd.addColorStop(1, 'rgba(255, 0, 0, ' + Math.sin(pulse) +')');
+
+    context.fillStyle = grd;
+    context.fillRect(0, 0, context.canvas.width, context.canvas.height);
+    pulse+=.1;
+ 
+}
+
+const drawLives = () =>{
+    context.font = "20px Comic Sans MS";
+    context.fillStyle = "#FFFFFF";
+    context.textAlign="left"; 
+    context.textBaseline = "top";
+    let x = 50;
+    context.fillText("Elons left: ", x, context.canvas.height*.05);
+    x+= 10;
+    for (let i = 0; i<lives; i++){
+        context.drawImage(muskHead, x+100, context.canvas.height*.05 - 25, 50,50);
+        x+=50;
+    }
+}
+
+const obstacleCollisionDetection = () => {
+    for(let i = 0; i<Obstacles.length; i++){
+        if(Obstacles[i].x <= 0){
+            Obstacles[i].isDead = true;
+            explosionGIFS.push(new Gif(explosionGif, Obstacles[i].x-50, Obstacles[i].y-150, .25));   
+            explosionSound.cloneNode(true).play();
+            lives--;
+            pulsing = true;
+            sirenShort.cloneNode(true).play();
+        }
+    }
+    if(lives>0){
+        if(pulsing){
+            drawGrad();
+        }
+        if(pulse>= Math.PI){
+            pulsing = false;
+        }
+     }
+    else{
+        if(pulsing){
+            drawGrad();
+            if(sirenLong.paused){
+                sirenLong.play();
+            }
+        }
+    }
+   
+}
+
 const mainDraw = () => {
     framecount++;
    
@@ -413,7 +486,7 @@ const mainDraw = () => {
    backgroundDraw();
    backgroundItterate();
    easeBackground(); 
-   showScore(); 
+   
 //     transformScale-=.001;
 //     context.translate(-canvas.width / 4, -canvas.height / 4);
 
@@ -421,12 +494,15 @@ const mainDraw = () => {
     drawMars();
     context.drawImage(musk["image"], musk["x"], musk["y"], 100,100);
     context.drawImage(truck["image"],truck["x"],truck["y"],truck["width"],truck["height"]);
+    drawObstacles(); 
+    showScore(); 
+    drawLives(); 
     
     collisionDetection();
     updateProjectiles();
+    obstacleCollisionDetection();
     checkExplosions();
     
-    drawObstacles();
     
     if(explosionI==explosionGif.length){
         explosionI=0;
@@ -434,11 +510,13 @@ const mainDraw = () => {
     
    randomSpawn();
     
+    
 
     itterateLevel(); 
     window.requestAnimationFrame(mainDraw);
     destroyObstacles();
     destroyProjectiles();
+    
 }
 menuDraw();
 // mainDraw();
