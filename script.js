@@ -2,7 +2,7 @@ let canvas = document.querySelector("canvas");
 let context = canvas.getContext("2d");
 
 let img = new Image(); 
-img.src = "img/background.jpg";
+img.src = "img/background.jpg"; 
 
 let mars = new Image();
 mars.src = "img/mars.png";
@@ -28,6 +28,11 @@ mainSound.loop = true;
 let introSound = document.querySelector("audio#introSound");
 introSound.controls = false;
 introSound.loop = true;
+
+const load = () => {
+    introSound.play();
+}
+window.onLoad = load();
 
 let tweetSound = document.querySelector("audio#tweet");
 let explosionSound = document.querySelector("audio#explosion");
@@ -83,6 +88,9 @@ let pumpX = 0;
 let onMenu = true;
 
 let score = 0;
+
+let itterateRate = 10;
+let previousScore = 0;
 
 for(let i = 0; i<17; i++){
     explosionGif.push(new Image());
@@ -193,7 +201,7 @@ const updateProjectiles = () => {
 const addObstacles = (y) => {
     let selected = Math.floor(Math.random()*enemies.length);
     console.log(selected);
-    Obstacles.push(new Obstacle(enemies[selected], context.canvas.width, y, 1, 10));
+    Obstacles.push(new Obstacle(enemies[selected], context.canvas.width, y, 1, itterateRate));
 //     console.log("Obstacle Added");
 }
 
@@ -259,7 +267,10 @@ const randomSpawn = () => {
     
     tempRandom = Math.random();
     if(tempRandom<upperBound && tempRandom>lowerBound){
-        addObstacles(Math.random()*context.canvas.height);
+        let randomHeight = Math.random()*context.canvas.height;
+        if (randomHeight<truck["height"]+musk["height"])
+            randomHeight +=truck["height"]+musk["height"];
+        addObstacles(randomHeight);
     }
 }
 
@@ -276,7 +287,7 @@ const backgroundDraw = () => {
 }
 
 const backgroundItterate = () => {
-    backgroundX-=10;
+    backgroundX-=itterateRate;
     if(backgroundX<=-1024){
       backgroundX=0;
     }
@@ -363,6 +374,13 @@ const showScore = () => {
     context.fillText("Score: " + score, context.canvas.width-150, context.canvas.height*.05);
 }
 
+const itterateLevel = () =>{
+    if(score%100 == 0 && score-100==previousScore){
+        itterateRate+=2;
+        previousScore=score;
+    }
+}
+
 const mainDraw = () => {
     framecount++;
    
@@ -377,7 +395,7 @@ const mainDraw = () => {
    backgroundItterate();
    easeBackground(); 
    showScore(); 
-    
+   itterateLevel(); 
 //     transformScale-=.001;
 //     context.translate(-canvas.width / 4, -canvas.height / 4);
 
