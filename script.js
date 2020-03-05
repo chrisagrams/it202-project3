@@ -201,7 +201,7 @@ const updateProjectiles = () => {
 const addObstacles = (y) => {
     let selected = Math.floor(Math.random()*enemies.length);
     console.log(selected);
-    Obstacles.push(new Obstacle(enemies[selected], context.canvas.width, y, 1, itterateRate));
+    Obstacles.push(new Obstacle(enemies[selected], context.canvas.width, y, itterateRate*.25, 1));
 //     console.log("Obstacle Added");
 }
 
@@ -353,6 +353,7 @@ const menuDraw = () => {
     else{
         introSound.pause();
         mainSound.play();
+        pumpX = 0;
         mainDraw();
     }
 
@@ -363,7 +364,7 @@ const drawMars = () => {
             marsX = context.canvas.width;
         }
         context.drawImage(mars, marsX, marsY, marsWidth,500);
-        marsX--;
+        marsX-=itterateRate*.1;
 }
 
 const showScore = () => {
@@ -376,9 +377,27 @@ const showScore = () => {
 
 const itterateLevel = () =>{
     if(score%100 == 0 && score-100==previousScore){
+        pumpX=0;
         itterateRate+=2;
         previousScore=score;
     }
+    showLevel();
+}
+
+const showLevel = () =>{
+    context.font = "60px Comic Sans MS";
+    context.fillStyle = "#FFFFFF";
+    context.textAlign="center"; 
+    context.textBaseline = "middle";
+    if(pumpX<=Math.PI){
+    context.translate(context.canvas.width*.5, context.canvas.height*.5);
+    context.scale(1*(Math.sin(pumpX)),1*(Math.sin(pumpX)));
+    context.translate(-context.canvas.width*.5, -context.canvas.height*.5);
+    context.fillText("Level " + Math.floor(score/100), context.canvas.width*.5, context.canvas.height*.5);
+    context.scale(-1*(Math.sin(pumpX)),-1*(Math.sin(pumpX)));
+    pumpX+=0.02;
+        
+    }    
 }
 
 const mainDraw = () => {
@@ -395,7 +414,6 @@ const mainDraw = () => {
    backgroundItterate();
    easeBackground(); 
    showScore(); 
-   itterateLevel(); 
 //     transformScale-=.001;
 //     context.translate(-canvas.width / 4, -canvas.height / 4);
 
@@ -417,11 +435,10 @@ const mainDraw = () => {
    randomSpawn();
     
 
-    
+    itterateLevel(); 
     window.requestAnimationFrame(mainDraw);
     destroyObstacles();
     destroyProjectiles();
-    
 }
 menuDraw();
 // mainDraw();
