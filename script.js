@@ -41,11 +41,14 @@ let sirenShort = document.querySelector("audio#sirenShort");
 
 let sirenLong = document.querySelector("audio#sirenLong");
 
+let coinSound = document.querySelector("audio#coinSound");
+
 let musk = {image: new Image(), x: 0, y:0};
 musk["image"].src = "img/musk.png";
 musk["x"] = truck["x"];
 musk["y"] = truck["y"] - 25;
 musk["height"] = 50;
+musk["width"] = 100;
 
 let movingDown = false;
 let movingUp = false;
@@ -71,8 +74,11 @@ muskHead.src = "img/musk3.png"
 let enemies = [SEC, bezzos, palin];
 
 let Obstacles = [];
+let Benefits = [];
 
 let explosionGif = [];
+
+let glowGif = [];
 
 let spawnProbability = 0.005;
 
@@ -103,12 +109,21 @@ let pulsing = false;
 
 let lives = 3;
 
+let gameover = false;
+
 for(let i = 0; i<17; i++){
     explosionGif.push(new Image());
     explosionGif[i].src = "img/explosionPNG/explosion" + (i+1) + ".png";
 }
 
+for(let i = 0; i<40; i++){
+    glowGif.push(new Image());
+    glowGif[i].src = "img/glowFrames/glow" + (i+1) + ".png";
+}
+
 let explosionGIFS = [];
+
+let glowGIFS = [];
 
 document.addEventListener("load", event => {
     introSound.play();
@@ -232,6 +247,15 @@ const destroyProjectiles = () => {
     }
 }
 
+const destroyBenefits = () => {
+    for (let i = 0; i<Benefits.length; i++){
+        if(Benefits[i].isDead){
+            Benefits.splice(i,1);
+            glowGIFS.splice(i,1);
+        }
+    }
+}
+
 const collisionDetection = () => {
     let width = 100;
     let height = 100;
@@ -257,6 +281,14 @@ const drawObstacles = () => {
     }
 }
 
+const drawBenefits = () => {
+    for (let i = 0; i<Benefits.length; i++){
+        let selected = Benefits[i];
+        context.drawImage(Benefits[i].image, Benefits[i].x, Benefits[i].y, 50,50);
+        Benefits[i].x -= Benefits[i].velocity;
+    }
+}
+
 
 const checkExplosions = () => {
     for (let i = 0; i<explosionGIFS.length; i++){
@@ -268,6 +300,22 @@ const checkExplosions = () => {
             context.drawImage(explosionGIFS[i].drawFrame(), explosionGIFS[i].x, explosionGIFS[i].y);
         }
         
+    }
+}
+
+const checkGlow = () => {
+    for(let i = 0; i<glowGIFS.length; i++){
+        console.log("LENGTH: " + glowGIFS.length)
+        glowGIFS[i].itterateI();
+        if(glowGIFS[i].dead){
+            
+        }
+        else{
+            console.log("DRAWING");
+            context.drawImage(glowGIFS[i].drawFrame(), glowGIFS[i].x, glowGIFS[i].y,100,100);
+            console.log(glowGIFS[i].x + " " + glowGIFS[i].y);
+            glowGIFS[i].x--;
+        }
     }
 }
 
@@ -287,6 +335,29 @@ const randomSpawn = () => {
             addObstacles(randomHeight);
         }
     }
+}
+
+const randomSpawnBenefit = () => {
+    let tempRandom = Math.random();
+    let lowerBound = tempRandom-spawnProbability*.1;
+    let upperBound = tempRandom+spawnProbability*.1;
+    
+    tempRandom = Math.random();
+    if(tempRandom<upperBound && tempRandom>lowerBound){
+        let randomHeight = Math.random()*context.canvas.height;
+        console.log(randomHeight);
+        if (randomHeight>context.canvas.height-truck["height"]-musk["height"]){
+            console.log("Out of bounds");
+        }
+        else{
+            addBenefit(randomHeight);
+        }
+    }
+}
+
+const addBenefit = (y) => {
+        Benefits.push(new BenefitObject(muskHead, context.canvas.width, y, 1,"health",false));
+        glowGIFS.push(new Gif(glowGif, context.canvas.width-27, y-50, .25,true))
 }
 
 const backgroundDraw = () => {
@@ -445,9 +516,11 @@ const drawLives = () =>{
 
 const obstacleCollisionDetection = () => {
     for(let i = 0; i<Obstacles.length; i++){
-        if(Obstacles[i].x <= 0){
+        if(Obstacles[i].x <= 0 || (Obstacles[i].x >= musk["x"] && Obstacles[i].x <= truck["x"] +truck["width"]
+                                  && Obstacles[i].y>=truck["y"] && Obstacles[i].y <= truck["y"]+truck["height"])
+          ){
             Obstacles[i].isDead = true;
-            explosionGIFS.push(new Gif(explosionGif, Obstacles[i].x-50, Obstacles[i].y-150, .25));   
+            explosionGIFS.push(new Gif(explosionGif, Obstacles[i].x-50, Obstacles[i].y-150, .25,false));   
             explosionSound.cloneNode(true).play();
             lives--;
             pulsing = true;
@@ -469,12 +542,52 @@ const obstacleCollisionDetection = () => {
                 sirenLong.play();
             }
         }
+        else{
+            sirenLong.pause();
+        }
+    }
+    if(lives<0){
+        gameover = true;
     }
    
 }
 
+const benefitCollisionDetection = () => {
+    for (let i = 0; i<Benefits.length; i++){
+        if(Benefits[i].x <= 0 || (Benefits[i].x >= musk["x"] && Benefits[i].x <= truck["x"] +truck["width"]
+                                  && Benefits[i].y>=truck["y"] && Benefits[i].y <= truck["y"]+truck["height"])
+          ){
+            if(Benefits[i].type == "health"){
+                if(lives<3)
+                    lives++;
+                Benefits[i].isDead = true;
+                
+            }
+                    coinSound.cloneNode(true).play();
+        }
+    }
+}
+
+const gameoverDraw = () =>{
+    let sounds = document.querySelectorAll("audio");
+    for (let i = 0; i<sounds.length; i++){
+        sounds[i].pause();
+    }
+    let oof = document.querySelector("audio#oof");
+    oof.play();
+    
+    context.font = "64px Comic Sans MS";
+    context.fillStyle = "#FFFFFF";
+    context.textAlign="center"; 
+    context.textBaseline = "middle";
+    context.fillText("Game over.", context.canvas.width*.5, context.canvas.height*.5);
+}
+
+
+
 const mainDraw = () => {
     framecount++;
+
    
     adjustCanvas();
 
@@ -495,12 +608,15 @@ const mainDraw = () => {
     context.drawImage(musk["image"], musk["x"], musk["y"], 100,100);
     context.drawImage(truck["image"],truck["x"],truck["y"],truck["width"],truck["height"]);
     drawObstacles(); 
+    drawBenefits();
     showScore(); 
     drawLives(); 
+    checkGlow();      
     
     collisionDetection();
     updateProjectiles();
     obstacleCollisionDetection();
+    benefitCollisionDetection();
     checkExplosions();
     
     
@@ -509,13 +625,18 @@ const mainDraw = () => {
     }
     
    randomSpawn();
-    
+   randomSpawnBenefit(); 
     
 
     itterateLevel(); 
+    if(!gameover){
     window.requestAnimationFrame(mainDraw);
+    } else{
+        gameoverDraw();
+    }
     destroyObstacles();
     destroyProjectiles();
+    destroyBenefits();
     
 }
 menuDraw();
@@ -544,8 +665,20 @@ class Obstacle{
     }
 }
 
+class BenefitObject{
+    constructor(image, x, y, velocity, type, isDead){
+        this.image = image;
+        this.x = x;
+        this.y = y;
+        this.velocity = velocity;
+        this.type = type;
+        this.isDead = false;
+        
+    }
+}
+
 class Gif{
-    constructor(images, x, y, speed){
+    constructor(images, x, y, speed, loop){
         this.images = images;
         this.x = x;
         this.y = y;
@@ -553,11 +686,18 @@ class Gif{
         this.i = 0;
         this.animating = false;
         this.dead = false;
+        this.loop = loop
     }
     itterateI(){
         this.i+=this.speed;
-        if(Math.floor(this.i)>this.images.length-1){
+        if(!this.loop){
+            if(Math.floor(this.i)>this.images.length-1){
             this.dead=true;
+           }
+        } else{
+            if(this.i>this.images.length-1){
+                this.i=0;
+            }
         }
     }
     drawFrame(){
